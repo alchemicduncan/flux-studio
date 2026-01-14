@@ -1,0 +1,19 @@
+[project]
+name = "flux-studio"
+version = "0.1.0"
+description = "A Python terminal application template using Textual"
+readme = "README.md"
+authors = [
+    { name = "Claude", email = "noreply@anthropic.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "textual>=7.2.0",
+]
+
+[project.scripts]
+flux-studio = "flux_studio.app:main"
+
+[build-system]
+requires = ["uv_build>=0.8.17,<0.9.0"]
+build-backend = "uv_build"
