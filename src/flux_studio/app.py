@@ -76,12 +76,11 @@ class FluxStudioApp(App):
     """
 
     BINDINGS = [
-        Binding("q", "quit", "Quit", show=True),
-        Binding("d", "toggle_dark", "Toggle Dark Mode", show=True),
         Binding("ctrl+n", "new_file", "New File", show=True),
         Binding("ctrl+o", "open_file", "Open File", show=True),
         Binding("ctrl+s", "save_file", "Save File", show=True),
         Binding("ctrl+shift+a", "toggle_agent_panel", "Agents", show=True),
+        Binding("ctrl+p", "command_palette", "Command Palette", show=True),
     ]
 
     def __init__(self):
@@ -146,6 +145,48 @@ class FluxStudioApp(App):
         else:
             panel.add_class("visible")
             self.agent_panel.refresh_data()
+
+    def on_markdown_editor_vim_command(self, event: MarkdownEditor.VimCommand) -> None:
+        """Handle vim commands from the editor."""
+        cmd = event.command.lower().strip()
+        
+        # Command routing
+        if cmd == "agents":
+            self.action_toggle_agent_panel()
+        elif cmd == "w":
+            self.run_worker(self.action_save_file())
+        elif cmd == "wq":
+            self.run_worker(self._save_and_quit())
+        elif cmd == "q":
+            self.action_quit()
+        elif cmd == "q!":
+            self.exit()
+        elif cmd == "new" or cmd == "n":
+            self.action_new_file()
+        elif cmd == "dark" or cmd == "d":
+            self.action_toggle_dark()
+        elif cmd.startswith("e ") or cmd.startswith("open "):
+            # :e filename or :open filename
+            path = cmd.split(" ", 1)[1].strip()
+            if path:
+                self.run_worker(self.editor.load_file(path))
+        elif cmd.startswith("w "):
+            # :w filename - save as
+            path = cmd.split(" ", 1)[1].strip()
+            if path:
+                self.run_worker(self.editor.save_file(path))
+        elif cmd == "help" or cmd == "h":
+            self.notify(
+                "Commands: :agents, :w, :wq, :q, :q!, :new, :dark, :e <file>, :w <file>",
+                timeout=5
+            )
+        else:
+            self.notify(f"Unknown command: :{cmd}", severity="warning")
+
+    async def _save_and_quit(self) -> None:
+        """Save the current file and quit."""
+        if await self.action_save_file():
+            self.exit()
 
     async def on_agent_panel_task_submitted(self, event: AgentPanel.TaskSubmitted) -> None:
         """Handle task submission from agent panel."""
