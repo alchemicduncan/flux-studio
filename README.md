@@ -1,13 +1,17 @@
 # Flux Studio
 
-A Python terminal application template using [Textual](https://textual.textualize.io/) for the UI and [uv](https://docs.astral.sh/uv/) for package management.
+A powerful, AI-integrated terminal-based markdown editor built with [Textual](https://textual.textualize.io/). Flux Studio combines the speed of Vim with modern AI capabilities to streamline technical writing, documentation, and content creation.
 
 ## Features
 
-- Beautiful terminal UI powered by Textual
-- Fast package management with uv
-- Modern Python project structure
-- Pre-configured with best practices
+- **Textual-based TUI**: Beautiful, responsive terminal user interface with native mouse support.
+- **AI Agent Integration**:
+    - **Research Agent**: Gather context and information for your writing.
+    - **Writing Agent**: Draft and expand content using AI.
+    - **Review Agent**: Get actionable feedback and improvements.
+- **Vim-like Command Palette**: Familiar commands for efficiency (e.g., `:w`, `:q`, `:agents`).
+- **Project & Package Management**: Built on modern standards with `uv`.
+- **Customizable**: Dark mode support and extensive configuration options.
 
 ## Prerequisites
 
@@ -29,41 +33,37 @@ uv sync
 
 ## Running the Application
 
-There are several ways to run the application:
-
 ### Using uv run (Recommended)
 
 ```bash
 uv run flux-studio
 ```
 
-### Using the module directly
+### Key Bindings & Commands
 
-```bash
-uv run python -m flux_studio.app
-```
-
-### After installing in development mode
-
-```bash
-uv pip install -e .
-flux-studio
-```
+| Key Binding | Command | Action |
+|-------------|---------|--------|
+| `Ctrl+N`    | `:new`  | Create a new file |
+| `Ctrl+O`    | `:e <file>` | Open a file |
+| `Ctrl+S`    | `:w`    | Save current file |
+| `Ctrl+Shift+A` | `:agents` | Toggle AI Agent Panel |
+| `Ctrl+P`    |         | Open Command Palette |
+| `Ctrl+Q`    | `:q`    | Quit application |
 
 ## Development
 
 ### Project Structure
 
 ```
-flux-studio/
-    src/
-        flux_studio/
-            __init__.py
-            app.py          # Main application
-            py.typed
-    pyproject.toml          # Project configuration
-    README.md
-    .python-version
+flux_studio/
+├── app.py                      # Main application entry point
+├── editor/                     # Core editor logic (MarkdownEditor)
+├── agents/                     # Agent orchestration & registry
+│   ├── agent_panel.py          # UI for interacting with agents
+│   ├── agent_registry.py       # Agent management
+│   └── ...
+├── file_comm.py                # File communication utilities
+└── ...
 ```
 
 ### Adding Dependencies
@@ -73,41 +73,6 @@ To add new dependencies:
 ```bash
 uv add <package-name>
 ```
-
-For development dependencies:
-
-```bash
-uv add --dev <package-name>
-```
-
-### Key Bindings
-
-- `q` - Quit the application
-- `d` - Toggle dark mode
-
-## Customization
-
-To customize this template for your own application:
-
-1. Update `pyproject.toml`:
-   - Change `name`, `description`, and `authors`
-   - Update the script entry point if needed
-
-2. Modify `src/flux_studio/app.py`:
-   - Customize the `FluxStudioApp` class
-   - Add your own widgets and screens
-   - Update the CSS styling
-
-3. Rename the package if desired:
-   - Rename `src/flux_studio` directory
-   - Update imports in `__init__.py` and `app.py`
-   - Update the entry point in `pyproject.toml`
-
-## Learn More
-
-- [Textual Documentation](https://textual.textualize.io/)
-- [uv Documentation](https://docs.astral.sh/uv/)
-- [Textual Widget Gallery](https://textual.textualize.io/widget_gallery/)
 
 ## License
 
