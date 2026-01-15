@@ -200,9 +200,10 @@ class FluxStudioApp(App):
         await self.agent_registry.create_task(
             description=event.description,
             context=context,
+            assigned_to=event.agent_id,
         )
         
-        self.notify(f"Task created: {event.description[:50]}...")
+        self.notify(f"Task created for {event.agent_id}: {event.description[:50]}...")
         self.agent_panel.refresh_data()
 
 
