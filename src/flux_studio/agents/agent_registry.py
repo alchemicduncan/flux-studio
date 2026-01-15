@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from flux_studio.agents.agent_protocol import (
+    AgentConfig,
     AgentMessage,
     AgentTask,
     MessageType,
@@ -39,6 +40,7 @@ class AgentRegistry:
         self._watcher_task: asyncio.Task | None = None
         self._message_callbacks: list[Callable[[AgentMessage], Any]] = []
         self._task_callbacks: list[Callable[[AgentTask], Any]] = []
+        self._registered_agents: list[AgentConfig] = []
 
     @property
     def protocol_version(self) -> str:
@@ -49,6 +51,11 @@ class AgentRegistry:
     def workspace_exists(self) -> bool:
         """Check if workspace is initialized."""
         return self.file_comm.workspace_exists()
+
+    @property
+    def registered_agents(self) -> list[AgentConfig]:
+        """Get list of registered agents."""
+        return self._registered_agents
 
     async def init_workspace(self) -> None:
         """Initialize the .flux-studio/ directory structure."""
@@ -63,6 +70,9 @@ class AgentRegistry:
         status_path = self.file_comm.workspace_dir / "orchestrator.json"
         await self.file_comm.write_json(status_path, status)
 
+        # Create empty agents config if it doesn't exist
+        await self.load_agent_config()
+
     def init_workspace_sync(self) -> None:
         """Synchronously initialize the workspace."""
         self.file_comm.init_workspace_sync()
@@ -74,6 +84,51 @@ class AgentRegistry:
         }
         status_path = self.file_comm.workspace_dir / "orchestrator.json"
         self.file_comm.write_json_sync(status_path, status)
+
+        # Initialize agents config synchronously
+        self.load_agent_config_sync()
+
+    async def load_agent_config(self) -> list[AgentConfig]:
+        """Load agents from flux_agents.json."""
+        config_path = self.file_comm.workspace_dir / "flux_agents.json"
+        data = await self.file_comm.read_json(config_path)
+
+        if not data:
+            # Create default empty config
+            default_config = {"version": "1.0", "agents": []}
+            if self.workspace_exists:
+                await self.file_comm.write_json(config_path, default_config)
+            data = default_config
+
+        self._registered_agents = []
+        for agent_data in data.get("agents", []):
+            try:
+                self._registered_agents.append(AgentConfig.from_dict(agent_data))
+            except (KeyError, ValueError):
+                pass
+
+        return self._registered_agents
+
+    def load_agent_config_sync(self) -> list[AgentConfig]:
+        """Synchronously load agents from flux_agents.json."""
+        config_path = self.file_comm.workspace_dir / "flux_agents.json"
+        data = self.file_comm.read_json_sync(config_path)
+
+        if not data:
+            # Create default empty config
+            default_config = {"version": "1.0", "agents": []}
+            if self.workspace_exists:
+                self.file_comm.write_json_sync(config_path, default_config)
+            data = default_config
+
+        self._registered_agents = []
+        for agent_data in data.get("agents", []):
+            try:
+                self._registered_agents.append(AgentConfig.from_dict(agent_data))
+            except (KeyError, ValueError):
+                pass
+
+        return self._registered_agents
 
     # -------------------------------------------------------------------------
     # Task Management

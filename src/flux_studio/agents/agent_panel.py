@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalScroll
 from textual.message import Message
 from textual.reactive import reactive
-from textual.widgets import Button, Input, Label, Static
+from textual.widgets import Button, Input, Label, Static, Select
 from textual import work
 
 from flux_studio.agents.agent_protocol import AgentMessage, AgentTask, TaskStatus, MessageType
@@ -186,9 +186,10 @@ class AgentPanel(Static):
 
     class TaskSubmitted(Message):
         """Posted when a task is submitted."""
-        def __init__(self, description: str):
+        def __init__(self, description: str, agent_id: str):
             super().__init__()
             self.description = description
+            self.agent_id = agent_id
 
     class RefreshRequested(Message):
         """Posted when refresh is requested."""
@@ -204,6 +205,7 @@ class AgentPanel(Static):
         yield Label("🤖 Agent Orchestrator", classes="panel-header")
         
         yield Label("Create Task", classes="section-header")
+        yield Select([], prompt="Select Agent...", id="agent-select")
         yield Input(placeholder="Describe what the agent should do...", id="task-input")
         yield Button("Submit Task", id="submit-task", variant="primary")
         
@@ -240,6 +242,16 @@ class AgentPanel(Static):
             status_label.update("🔴 Workspace not initialized")
             return
         
+        # Update agent list
+        await self._registry.load_agent_config()
+        agent_select = self.query_one("#agent-select", Select)
+
+        options = []
+        for agent in self._registry.registered_agents:
+            options.append((agent.name, agent.id))
+
+        agent_select.set_options(options)
+
         # Load tasks
         task_list = self.query_one("#task-list", VerticalScroll)
         await task_list.remove_children()
@@ -265,17 +277,25 @@ class AgentPanel(Static):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
         if event.button.id == "submit-task":
-            input_widget = self.query_one("#task-input", Input)
-            description = input_widget.value.strip()
-            
-            if description:
-                self.post_message(self.TaskSubmitted(description))
-                input_widget.value = ""
+            self._submit_task()
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle enter key in input."""
         if event.input.id == "task-input":
-            description = event.value.strip()
-            if description:
-                self.post_message(self.TaskSubmitted(description))
-                event.input.value = ""
+            self._submit_task()
+
+    def _submit_task(self) -> None:
+        """Validate and submit the task."""
+        input_widget = self.query_one("#task-input", Input)
+        agent_select = self.query_one("#agent-select", Select)
+
+        description = input_widget.value.strip()
+        agent_id = agent_select.value
+
+        if agent_id == Select.BLANK:
+            self.notify("Please select an agent first", severity="warning")
+            return
+
+        if description:
+            self.post_message(self.TaskSubmitted(description, str(agent_id)))
+            input_widget.value = ""

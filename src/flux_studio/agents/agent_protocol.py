@@ -60,6 +60,38 @@ def _now_iso() -> str:
 
 
 @dataclass
+class AgentConfig:
+    """Configuration for an ACP agent."""
+
+    id: str
+    name: str
+    command: list[str]
+    env: dict[str, str] = field(default_factory=dict)
+    description: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "command": self.command,
+            "env": self.env,
+            "description": self.description,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "AgentConfig":
+        """Deserialize from dictionary."""
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            command=data.get("command", []),
+            env=data.get("env", {}),
+            description=data.get("description", ""),
+        )
+
+
+@dataclass
 class AgentInfo:
     """Information about an available agent."""
 
